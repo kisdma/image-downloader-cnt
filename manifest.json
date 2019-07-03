@@ -1,12 +1,13 @@
 {
-  "name": "Image Downloader",
+  "name": "Image Downloader Continued",
   "description": "Browse and download images on a web page.",
-  "version": "2.4.2",
+  "version": "2.5",
   "minimum_chrome_version": "31",
   "manifest_version": 2,
   "permissions": [
     "activeTab",
-    "downloads"
+    "downloads",
+    "<all_urls>"
   ],
   "browser_action": {
     "default_icon": "/icon_128.png",
