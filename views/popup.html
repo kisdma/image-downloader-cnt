@@ -180,9 +180,17 @@
         </tr>
       </table>
 
-      <label id="only_images_from_links_container" title="Only show images from direct links on the page; this can be useful on sites like Reddit">
-        <input type="checkbox" id="only_images_from_links_checkbox" />Only images from links
-      </label>
+	  <tr id="checkmarks_row">
+		<td><label id="only_images_from_links_container" title="Only show images from direct links on the page; this can be useful on sites like Reddit">
+			<input type="checkbox" id="only_images_from_links_checkbox" />Only images from links
+		</label></td>
+		<td><label id="sort_by_size" title="Checked: by width+height, unchecked: by width">
+			<input type="checkbox" id="sort_by_size_checkbox" />Order by Width+Height
+		</label></td>
+		<td><label id="sort_order" title="Checked: Smallest-to-largest, unchecked: reverse">
+			<input type="checkbox" id="sort_order_checkbox" />Smallest-to-largest
+		</label></td>
+	  </tr>
     </div>
 
     <div id="images_cache"></div>

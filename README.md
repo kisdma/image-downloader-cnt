@@ -1,4 +1,8 @@
-Image Downloader
+Image Downloader (Continued)
+================
+This is a fork of Image Downloader by Vlad Sabev (vdsabev). Original extension is archived and this projects aims to fill the gap. The goal is to fix bugs, support more websites (as much as possible), add features and enhancements. Suggestions are welcome, please file an issue.
+
+Description
 ================
 If you need to bulk download images from a web page, with this extension you can:
 - See images that the page contains and links to
@@ -6,7 +10,7 @@ If you need to bulk download images from a web page, with this extension you can
 - Optionally show only images from links
 - Select images to download by clicking on the image
 - Use dedicated buttons to download or open individual images in new tabs
-- Customize image display width, columns, border size, and color
+- Customize image display width, columns, border size, and colour
 - Hide filters, buttons and notifications you don't need
 
 When you press the "Download" button, all selected images are saved to the default download directory of Chrome, or to a directory inside it if you specify a subfolder name.
@@ -20,6 +24,17 @@ If you need that kind of functionality, there are other extensions that can be u
 
 Change Log
 ================
+2.5:
+- Added display of image size and image file name (can be turned off in settings)
+- Added ordering images by size - two new options: 1) to order by width only (default) or by width+height, 2) largest-to-smallest (default) or reverse
+- Added scaling images vertically if they taller than 200px
+- SVG format wasn't being read from 'svg' tag - fixed 
+- Added reading image from 'poster' of 'video' tag
+- Fixed background images being non-recognized. Reading styleSheets doesn't seem to work (to read from cssRules). Workaround implemented: fetching CSS files with links obtained from 'link' tags. Note: some sites use different second-level domain to store CSS, in this case fetch won't work if extension doesn't have permission for 'all_urls' (or particular domain). This just results in some images not showing up. Provide permissions in Chrome Extensions as needed.
+- Added maximum-resolution images discovery on Google Maps and Street View Photos (discovered undocumented api) 
+- Added high-resolution previews for youtube thumbnails (including video of the current page)
+- Corrected regexp for 'a' tag's link parsing to prevent non-image links discovery
+
 2.4.2:
 - Workaround for Chrome disallowing access to cross-domain CSS rules
 
@@ -128,6 +143,8 @@ And Zepto.js: http://zeptojs.com
 
 License
 =======
+Copyright (c) 2019 Dmitry Kislitsyn
+
 Copyright (c) 2017 Vladimir Sabev
 
 Permission is hereby granted, free of charge, to any person
