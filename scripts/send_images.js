@@ -8,6 +8,7 @@
 	urlRegexp: /(?:url\(\'?\"?)([^\'\(\)]*)(?:\'?\"?\))/g,
 
     extractImagesFromTags() {
+	
 	  var arr = [].slice.apply(document.querySelectorAll('img, a, svg, link, video, [style]')).map(imageDownloader.extractImageFromElement);
 	  
 	  // Adding high-resolution links for Google Map/Street Photos
@@ -124,8 +125,15 @@
 	  
       if (element.tagName.toLowerCase() === 'svg') {
 	    var s = new XMLSerializer().serializeToString(element);
-		var encodedData = window.btoa(s);
-        return 'data:image/svg+xml;base64,' + encodedData;
+		if (s.length < 15000) {
+			if (/[^\u0000-\u00ff]/.test(s)) {
+				var encodedData = window.btoa(unescape(encodeURIComponent(s)));
+				return 'ENCODEDdata:image/svg+xml;base64,' + encodedData;
+			} else {
+				var encodedData = window.btoa(s);
+				return 'data:image/svg+xml;base64,' + encodedData;
+			}
+		}
       }
 
       if (element.tagName.toLowerCase() === 'a') {

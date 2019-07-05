@@ -240,7 +240,12 @@
     $.extend(linkedImages, result.linkedImages);
     for (var i = 0; i < result.images.length; i++) {
       if (allImages.indexOf(result.images[i]) === -1) {
-        allImages.push(result.images[i]);
+        if (result.images[i].indexOf('ENCODEDdata:image/svg+xml;base64,') === 0) {
+          allImages.push('data:image/svg+xml;base64,' 
+		    + decodeURIComponent(escape(window.atob(result.images[i].slice('ENCODEDdata:image/svg+xml;base64,'.length)))));
+		} else {
+          allImages.push(result.images[i]);
+		}
       }
     }
     filterImages();
