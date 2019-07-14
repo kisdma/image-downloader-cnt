@@ -98,13 +98,13 @@
 	  
       <br/>
       <label title="Enables option to order by Width + Height">
-        <input type="checkbox" id="sort_by_size_checkbox" />  
+        <input type="checkbox" id="show_sort_by_size_checkbox" />  
         <span>Show <b>Order by Width+Height</b> option</span>
       </label>
       <br/>
 	  
       <label title="Enables option for ascending/descending">
-        <input type="checkbox" id="sort_order_checkbox" />
+        <input type="checkbox" id="show_sort_order_checkbox" />
         <span>Show <b>Smallest-to-largest</b> option</span>
       </label>
     </fieldset>
@@ -147,12 +147,17 @@
 
         <tr>
           <td><label for="image_border_width_numberbox">Border Width:</label></td>
-          <td><input type="number" id="image_border_width_numberbox" min="1" max="10" required />px</td>
+          <td><input type="number" id="image_border_width_numberbox" min="0" max="10" required />px</td>
         </tr>
 
         <tr>
           <td><label for="image_border_color_picker">Border Color:</label></td>
           <td><input type="color" id="image_border_color_picker" /></td>
+        </tr>
+
+        <tr>
+          <td><label for="image_tile_color_picker">Tile Color:</label></td>
+          <td><input type="color" id="image_tile_color_picker" /></td>
         </tr>
       </table>
     </fieldset>

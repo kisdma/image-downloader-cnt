@@ -24,6 +24,12 @@ If you need that kind of functionality, there are other extensions that can be u
 
 Change Log
 ================
+2.6:
+Major redesign and improved image discovery
+- Modernized the popup look, images are placed on tiles with more image info, added tile color selection to options 
+- Fixed several bugs, improved image discovery for many cases, including deep css parsing instead of broken styleSheets api
+- Added shortcuts to Reverse Image Search sites (Google, Bing, Yandex, TinEye) for each image
+
 2.5:
 - Added display of image size and image file name (can be turned off in settings)
 - Added ordering images by size - two new options: 1) to order by width only (default) or by width+height, 2) largest-to-smallest (default) or reverse
@@ -140,6 +146,10 @@ Based on the Google Chrome Extension sample "Download Selected Links": https://d
 Uses the tiny, but awesome JSS library: https://github.com/Box9/jss
 
 And Zepto.js: http://zeptojs.com
+
+Images:
+download.svg licensed by CC BY 3.0 from oNline Web Fonts http://www.onlinewebfonts.com/icon
+open.svg licensed by CC BY 3.0 from oNline Web Fonts http://www.onlinewebfonts.com/icon
 
 License
 =======

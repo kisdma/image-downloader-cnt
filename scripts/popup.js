@@ -104,7 +104,7 @@
           filterImages();
         });
     }
-    if (ls.sort_images_by_width === 'true') {
+    if (ls.show_sort_images_by_width === 'true') {
       $('#sort_by_size_checkbox')
         .prop('checked', ls.sort_by_size === 'true')
         .on('change', function () {
@@ -112,7 +112,7 @@
           filterImages();
         });
     }
-    if (ls.sort_descending === 'true') {
+    if (ls.show_sort_order === 'true') {
       $('#sort_order_checkbox')
         .prop('checked', ls.sort_order === 'true')
         .on('change', function () {
@@ -155,14 +155,54 @@
           toggle_all_checkbox.prop('checked', false);
         }
       })
-      .on('click', '.image_url_textbox', function () {
-        this.select();
-      })
+        .on('click', '.image_url_textbox', function () {
+        //Create a textbox field where we can insert text to. 
+        var copyFrom = document.createElement("textarea");
+        
+        //Set the text content to be the text you wished to copy.
+        copyFrom.textContent = $(this).data('url');
+        
+        //Append the textbox field into the body as a child. 
+        //"execCommand()" only works when there exists selected text, and the text is inside 
+        //document.body (meaning the text is part of a valid rendered HTML element).
+        document.body.appendChild(copyFrom);
+        
+        //Select all the text!
+        copyFrom.select();
+        
+        //Execute command
+        document.execCommand('copy');
+        
+        //(Optional) De-select the text using blur(). 
+        copyFrom.blur();
+        
+        //Remove the textbox field from the document.body, so no other JavaScript nor 
+        //other elements can get access to this.
+        document.body.removeChild(copyFrom);
+    })
+    .on('click', '.image_size_textbox', function () {
+      var dimension = ['width', 'height'];
+      for (var i = 0; i < dimension.length; i++) {
+        $('#image_' + dimension[i] + '_filter_slider').val([10*Math.floor($(this).data(dimension[i])/10),10*Math.ceil($(this).data(dimension[i])/10)]);
+      }
+    })
       .on('click', '.download_image_button', function () {
         chrome.downloads.download({ url: $(this).data('url') });
       })
       .on('click', '.open_image_button', function () {
         chrome.tabs.create({ url: $(this).data('url'), active: false });
+    })
+    .on('click', '.image_gris_textbox', function () {
+      chrome.tabs.create({ url: 'https://www.google.com/searchbyimage?hl=en&safe=off&site=search&image_url=' + $(this).data('url'), active: false });
+    })
+    .on('click', '.image_teris_textbox', function () {
+      chrome.tabs.create({ url: 'http://tineye.com/search?pluginver=bookmark_1.0&url=' + $(this).data('url'), active: false });
+    })
+    .on('click', '.image_biris_textbox', function () {
+      chrome.tabs.create({ url: 'http://www.bing.com/images/searchbyimage?cbir=sbi&imgurl=' + $(this).data('url'), active: false });
+    })
+    .on('click', '.image_yaris_textbox', function () {
+      chrome.tabs.create({ url: 'https://yandex.com/images/search?rpt=imageview&img_url=' + $(this).data('url'), active: false });
       });
 
     // Get images on the page
@@ -204,8 +244,8 @@
     $('#image_width_filter').toggle(ls.show_image_width_filter === 'true');
     $('#image_height_filter').toggle(ls.show_image_height_filter === 'true');
     $('#only_images_from_links_container').toggle(ls.show_only_images_from_links === 'true');
-    $('#sort_by_size').toggle(ls.sort_images_by_width === 'true');
-    $('#sort_order').toggle(ls.sort_descending === 'true');
+    $('#sort_by_size').toggle(ls.show_sort_images_by_width === 'true');
+    $('#sort_order').toggle(ls.show_sort_order === 'true');
 
     // Images
     jss.set('.image_buttons_container', {
@@ -217,10 +257,13 @@
       'max-width': ls.image_max_width + 'px',
       'border-width': ls.image_border_width + 'px',
       'border-style': 'solid',
-      'border-color': '#f6f6f6'
+      'border-color': ls.image_tile_color
     });
     jss.set('img.checked', {
       'border-color': ls.image_border_color
+    });
+    jss.set('.filename_textbox', {
+      'background-color': ls.image_tile_color
     });
 
     // Periodically set the body padding to offset the height of the fixed position filters
@@ -231,6 +274,7 @@
 
   var allImages = [];
   var imSizes = [];
+  var imTypes = [];
   var visibleImages = [];
   var linkedImages = {};
 
@@ -238,16 +282,45 @@
   // `send_images.js` is injected into all frames of the active tab, so this listener may be called multiple times
   chrome.runtime.onMessage.addListener(function (result) {
     $.extend(linkedImages, result.linkedImages);
+    const l = allImages.length;
     for (var i = 0; i < result.images.length; i++) {
       if (allImages.indexOf(result.images[i]) === -1) {
-        if (result.images[i].indexOf('ENCODEDdata:image/svg+xml;base64,') === 0) {
-          allImages.push('data:image/svg+xml;base64,' 
-		    + decodeURIComponent(escape(window.atob(result.images[i].slice('ENCODEDdata:image/svg+xml;base64,'.length)))));
-		} else {
-          allImages.push(result.images[i]);
-		}
+        allImages.push(result.images[i]);
       }
     }
+    // Adding high-resolution links for Google Map/Street Photos
+	  var arr1 = [];
+    var newIm = '';
+	  var regex = RegExp('(.*(ggpht|googleusercontent).*?)(=|$)','i');
+    for (let i = l; i < allImages.length; i++) {
+      if (regex.test(allImages[i])) {
+        var temp_elem = allImages[i];
+        allImages.splice(i,1) 
+        i--;
+        newIm = regex.exec(temp_elem)[1] + '=s16383';
+        if ((arr1.indexOf(newIm) === -1)&&(allImages.indexOf(newIm) === -1)) {
+          arr1.push(newIm);
+        } else {
+        //do nothing
+        }
+      }
+    }
+	  
+	  // Adding high-resolution previews and thumbnails for Youtube links
+	  var arr2 = [];
+    var yid = '';
+	  regex = RegExp('(ytimg|youtube).*(\\/vi\\/|\\?v=)([^\\/=]*)(\\/|=|$)','i');
+    for (let i = l; i < allImages.length; i++) {
+      if (regex.test(allImages[i])) {
+        yid = regex.exec(allImages[i])[3];
+        arr2.push('https://img.youtube.com/vi/' + yid + '/maxresdefault.jpg');
+        for (let i = 0; i < 4; i++) {
+          arr2.push('https://img.youtube.com/vi/' + yid + '/' + i + '.jpg');
+        }
+      }
+    }
+    allImages = allImages.concat(arr1).concat(arr2);
+	  
     filterImages();
   });
 
@@ -331,38 +404,56 @@
                  );
         });
       }
-	
-	if (ls.sort_images_by_width === 'true' && ls.sort_by_size === 'true'){
-		visibleImages = visibleImages.sort(function (url1, url2) {
-		  var image1 = images_cache.children('img[src="' + encodeURI(url1) + '"]')[0];
-		  var image2 = images_cache.children('img[src="' + encodeURI(url2) + '"]')[0];
-		  return (image2.naturalWidth + image2.naturalHeight) - (image1.naturalWidth + image1.naturalHeight);
-		});
-	} else {
-		visibleImages = visibleImages.sort(function (url1, url2) {
-		  var image1 = images_cache.children('img[src="' + encodeURI(url1) + '"]')[0];
-		  var image2 = images_cache.children('img[src="' + encodeURI(url2) + '"]')[0];
-		  return  image2.naturalWidth - image1.naturalWidth;
-		});
-	}
-	
-	if (ls.sort_descending === 'true' && ls.sort_order === 'true'){
-		visibleImages = visibleImages.reverse();
-	}
-		
-	imSizes = [];
-	for (var i = 0; i < visibleImages.length; i++) {
-	  var image = images_cache.children('img[src="' + encodeURI(visibleImages[i]) + '"]')[0];
+  
+  if (ls.show_sort_images_by_width === 'true' && ls.sort_by_size === 'true'){
+    visibleImages = visibleImages.sort(function (url1, url2) {
+      var image1 = images_cache.children('img[src="' + encodeURI(url1) + '"]')[0];
+      var image2 = images_cache.children('img[src="' + encodeURI(url2) + '"]')[0];
+      return (image2.naturalWidth + image2.naturalHeight) - (image1.naturalWidth + image1.naturalHeight);
+    });
+  } else {
+    visibleImages = visibleImages.sort(function (url1, url2) {
+      var image1 = images_cache.children('img[src="' + encodeURI(url1) + '"]')[0];
+      var image2 = images_cache.children('img[src="' + encodeURI(url2) + '"]')[0];
+      return  image2.naturalWidth - image1.naturalWidth;
+    });
+  }
+  
+  if (ls.show_sort_order === 'true' && ls.sort_order === 'true'){
+    visibleImages = visibleImages.reverse();
+  }
+    
+  imSizes = [];
+  for (var i = 0; i < visibleImages.length; i++) {
+    var image = images_cache.children('img[src="' + encodeURI(visibleImages[i]) + '"]')[0];
       imSizes.push(image.naturalWidth + ' x ' + image.naturalHeight);
     }
-	
+      
+    imTypes = [];
+    for (var i = 0; i < visibleImages.length; i++) {
+      var imageType = '---';
+      var ext="unknown";
+      try{
+        if(visibleImages[i].indexOf("data:image/")==0){
+          ext=/data:image\/(.*?)(\+|\;)/i.exec(visibleImages[i])[1];
+        }else{
+          ext = /^[^?]+\.([^.#&?=:/]*)([#&?=].*$|$)/i.exec(visibleImages[i])[1];
+        }
+      }catch(e){
+        console.log('Error in determining the type of ' + visibleImages[i] + '; error: ' + e);
+      }
+      if(/^(png|jpg|jpeg|gif|bmp|ico|tiff|svg|svgz|webp)$/i.test(ext))
+        imageType=ext.toUpperCase();
+      imTypes.push(imageType);
+    }
+    
       displayImages();
     }, 200);
   }
 
   function displayImages() {
     $('#download_button').prop('disabled', true);
-	
+  
     var images_table = $('#images_table').empty();
 
     var toggle_all_checkbox_row = '<tr><th align="left" colspan="' + ls.columns + '"><label><input type="checkbox" id="toggle_all_checkbox" />Select all (' + visibleImages.length + ')</label></th></tr>';
@@ -388,62 +479,71 @@
 
     for (var rowIndex = 0; rowIndex < rows; rowIndex++) {
       if (show_image_url || show_open_image_button || show_download_image_button) {
-        var tools_row = $('<tr></tr>');
+        var conainer_row = $('<tr></tr>');
         for (var columnIndex = 0; columnIndex < columns; columnIndex++) {
+          var conainer_td = $('<td colspan="' + colspan + '" style="min-width: ' + ls.image_max_width + 'px; width: ' + columnWidth + '; vertical-align: top;"></td>');
+          var conainer_div = $('<div style = "background-color:' + ls.image_tile_color + '; box-shadow: 5px 5px 5px rgba(3,0,3,0.3); margin:5px 5px 5px 5px;"></div>');
+          var conainer_table = $('<table></table>');
           var index = rowIndex * columns + columnIndex;
           if (index === visibleImages.length) break;
-
+          
+          var tools_row = $('<tr></tr>');
+          var links_row = $('<div></div>');
           if (show_image_url) {
-            tools_row.append('<td><input type="text" class="image_url_textbox" value="' + visibleImages[index] + '" readonly /></td>');
+            links_row.append('<td><div class="image_url_textbox" data-url="' + visibleImages[index] + '" style="margin: 3px 0px 3px 2px;" title="Click to copy: ' + visibleImages[index] + '">link</div></td>');
           }
-
+          
+            links_row.append('<td style="padding: 0px 0px;"><div class="image_gris_textbox" data-url="' + visibleImages[index] + '" style="margin: 3px 0px 3px 0px;" title="RIS with Google Image">GI</div></td>');
+          
+            links_row.append('<td style="padding: 0px 0px;"><div class="image_teris_textbox" data-url="' + visibleImages[index] + '" style="margin: 3px 0px 3px 0px;" title="RIS with TinEye">TE</div></td>');
+          
+            links_row.append('<td style="padding: 0px 0px;"><div class="image_biris_textbox" data-url="' + visibleImages[index] + '" style="margin: 3px 0px 3px 0px;" title="RIS with Bing">BI</div></td>');
+          
+            links_row.append('<td style="padding: 0px 0px;"><div class="image_yaris_textbox" data-url="' + visibleImages[index] + '" style="margin: 3px 0px 3px 0px;" title="RIS with Yandex">YA</div></td>');
+            
+            tools_row.append(links_row);
+          
           if (show_open_image_button) {
             tools_row.append('<td class="open_image_button" data-url="' + visibleImages[index] + '" title="Open in new tab">&nbsp;</td>');
           }
-
+          
           if (show_download_image_button) {
             tools_row.append('<td class="download_image_button" data-url="' + visibleImages[index] + '" title="Download">&nbsp;</td>');
           }
-        }
-        images_table.append(tools_row);
+          conainer_table.append(tools_row);
+          
+          // Images row
+          var images_row = $('<tr></tr>');
+          if (/base64/i.test(visibleImages[index])) {
+            var filename = 'base64';
+          } else {
+            var arr = visibleImages[index].split('/');
+            var filename = /^([^#&?=]*)([#&?=].*$|$)/i.exec(arr[arr.length-1])[1];
+          }
+          var image = '<td colspan="' + colspan + '" style="padding: 0px 2px; min-width: ' + ls.image_max_width + 'px; width: ' + columnWidth + '; vertical-align: top; text-align: center;"><img id="image' + index + '" src="' + visibleImages[index] + '" style="max-height:200px;" title = "' + filename + '"/></td>';
+          images_row.append(image);
+          conainer_table.append(images_row);    
+          
+          // Image filenames row
+          var filenames_row = $('<tr></tr>');
+          var filenames_txt = '<td colspan="' + colspan + '" style="min-width: ' + ls.image_max_width + 'px; width: ' + columnWidth + '; vertical-align: top;">' + 
+          '<input type="text" class="filename_textbox" value="' + filename + '" readonly />' + '</td>';
+          filenames_row.append(filenames_txt);
+          conainer_table.append(filenames_row);  
+          
+          // Sizes row
+          var size_row = $('<tr></tr>');
+          var size_txt = '<td colspan="' + colspan + '" style="min-width: ' + ls.image_max_width + 'px; width: ' + columnWidth + '; vertical-align: top;"><div class="image_url_textbox" data-url="' + filename + '"  title="Click to copy: ' + filename + '">' + imTypes[index] + '</div><div class = "image_size_textbox" data-width = "' + imSizes[index].split(' ')[0] + '" data-height = "' + imSizes[index].split(' ')[2] + '" style="float: right;" title="Click to set size filters">' + imSizes[index] + '</div></td>';
+          size_row.append(size_txt);
+          conainer_table.append(size_row);  
+          
+          conainer_div.append(conainer_table);
+          conainer_td.append(conainer_div);
+          
+          conainer_row.append(conainer_td);
+        }    
+        images_table.append(conainer_row);      
       }
-
-      // Image filenames row
-      var filenames_row = $('<tr></tr>');
-      for (var columnIndex = 0; columnIndex < columns; columnIndex++) {
-        var index = rowIndex * columns + columnIndex;
-        if (index === visibleImages.length) break;
-		if (/base64/i.test(visibleImages[index])) {
-			var filename = 'base64';
-		} else {
-			var arr = visibleImages[index].split('/');
-			var filename = /([^?]*)(\\?|$)/i.exec(arr[arr.length-1])[1];
-		}
-        var filenames_txt = '<td colspan="' + colspan + '" style="min-width: ' + ls.image_max_width + 'px; width: ' + columnWidth + '; vertical-align: top;">' + 
-			'<input type="text" class="filename_textbox" value="' + filename + '" readonly />' + '</td>';
-        filenames_row.append(filenames_txt);
-      }
-      images_table.append(filenames_row);
-
-      // Sizes row
-      var size_row = $('<tr></tr>');
-      for (var columnIndex = 0; columnIndex < columns; columnIndex++) {
-        var index = rowIndex * columns + columnIndex;
-        if (index === visibleImages.length) break;
-        var size_txt = '<td colspan="' + colspan + '" style="min-width: ' + ls.image_max_width + 'px; width: ' + columnWidth + '; vertical-align: top;">' + imSizes[index] + '</td>';
-        size_row.append(size_txt);
-      }
-      images_table.append(size_row);
-	  
-      // Images row
-      var images_row = $('<tr></tr>');
-      for (var columnIndex = 0; columnIndex < columns; columnIndex++) {
-        var index = rowIndex * columns + columnIndex;
-        if (index === visibleImages.length) break;
-        var image = '<td colspan="' + colspan + '" style="min-width: ' + ls.image_max_width + 'px; width: ' + columnWidth + '; vertical-align: top; text-align: center;"><img id="image' + index + '" src="' + visibleImages[index] + '" style="max-height:200px;" /></td>';
-        images_row.append(image);
-      }
-      images_table.append(images_row);
     }
   }
 

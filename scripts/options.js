@@ -15,8 +15,8 @@
     $('#show_image_width_filter_checkbox').prop('checked', values.show_image_width_filter === 'true');
     $('#show_image_height_filter_checkbox').prop('checked', values.show_image_height_filter === 'true');
     $('#show_only_images_from_links_checkbox').prop('checked', values.show_only_images_from_links === 'true');
-    $('#sort_by_size_checkbox').prop('checked', values.sort_images_by_width === 'true');
-    $('#sort_order_checkbox').prop('checked', values.sort_descending === 'true'); 
+    $('#show_sort_by_size_checkbox').prop('checked', values.show_sort_images_by_width === 'true');
+    $('#show_sort_order_checkbox').prop('checked', values.show_sort_order === 'true'); 
 
     // Images
     $('#show_image_url_checkbox').prop('checked', values.show_image_url === 'true');
@@ -28,6 +28,7 @@
     $('#image_max_width_numberbox').val(values.image_max_width);
     $('#image_border_width_numberbox').val(values.image_border_width);
     $('#image_border_color_picker').val(values.image_border_color);
+    $('#image_tile_color_picker').val(values.image_tile_color);
   }
 
   function initializeControlEvents() {
@@ -48,8 +49,8 @@
     ls.show_image_width_filter = $('#show_image_width_filter_checkbox').prop('checked');
     ls.show_image_height_filter = $('#show_image_height_filter_checkbox').prop('checked');
     ls.show_only_images_from_links = $('#show_only_images_from_links_checkbox').prop('checked');
-    ls.sort_images_by_width = $('#sort_by_size_checkbox').prop('checked');
-    ls.sort_descending = $('#sort_order_checkbox').prop('checked');
+    ls.show_sort_images_by_width = $('#show_sort_by_size_checkbox').prop('checked');
+    ls.show_sort_order = $('#show_sort_order_checkbox').prop('checked');
 
     // Images
     ls.show_image_url = $('#show_image_url_checkbox').prop('checked');
@@ -61,6 +62,7 @@
     ls.image_max_width = $('#image_max_width_numberbox').val();
     ls.image_border_width = $('#image_border_width_numberbox').val();
     ls.image_border_color = $('#image_border_color_picker').val();
+    ls.image_tile_color = $('#image_tile_color_picker').val();
 
     addNotification('Options saved.', 'success');
   }

@@ -13,6 +13,9 @@
         min-width: 200px;
         min-height: 150px;
         box-sizing: border-box;
+        font-family: "Segoe UI", "Lucida Grande", Tahoma, sans-serif;
+        color:#404040;
+        background-color:#e8e8e8;
       }
 
       .grid
@@ -20,7 +23,7 @@
         width: 100%;
         border-collapse: collapse;
       }
-      .grid td { padding: 0 2px; }
+      .grid td { padding: 0px 2px; }
       .grid td input[type="text"],
       .grid td input[type="button"],
       .grid td input[type="number"],
@@ -55,17 +58,53 @@
       .open_image_button,
       .download_image_button
       {
-        width: 24px;
-        height: 24px;
+        width: 22px;
+        height: 34px;
         cursor: pointer;
 
-        background-size: 24px;
+        background-size: 20px;
         background-repeat: no-repeat;
         background-position: center;
       }
+      .download_image_button
+	  {
+		background-size: 18px;
+	  }
 
-      .open_image_button     { background-image: url("/images/open.png"); }
-      .download_image_button { background-image: url("/images/download.png"); }
+      .open_image_button     { background-image: url("/images/open.svg"); }
+      .download_image_button { background-image: url("/images/download.svg"); }
+	  
+      .image_url_textbox,
+      .image_size_textbox,
+      .image_type_textbox,
+      .image_gris_textbox,
+      .image_teris_textbox,
+      .image_biris_textbox,
+      .image_yaris_textbox {
+          cursor: pointer;
+	      float: left;
+          background: #3498db;
+          padding: 1px 4px;
+          border-radius: 9px;
+          font-size: 12px;
+          color: #fff;
+		  margin: 3px 2px 3px 2px
+      }
+	  
+	  .images_table {
+		background-color:#e8e8e8;
+	  }
+		
+	  .filename_textbox {
+		  bottom:0px;
+		  left:0px;
+		  width:100%;
+		  box-sizing:border-box;
+		  z-index:1000;
+		  color:#6b6969;
+		  border:0px;
+		  padding:2px 2px;
+	  }
     </style>
 
     <script src="/lib/zepto.js"></script>
