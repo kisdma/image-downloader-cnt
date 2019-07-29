@@ -2,7 +2,7 @@
   'use strict';
 
   // One-time reset of settings
-  chrome.runtime.onInstalled.addListener(function (details) {
+/*   chrome.runtime.onInstalled.addListener(function (details) {
     if (details.reason === 'install') { // Open the options page after install
       chrome.tabs.create({ url: '/views/options.html' });
     }
@@ -10,7 +10,7 @@
       ls.clear();
     }
   });
-
+ */
   // Global
   ls.animation_duration = '500';
 
@@ -46,6 +46,7 @@
 	  show_sort_order: true,
     // Images
     show_image_url: true,
+    show_image_filename: true,
     show_open_image_button: true,
     show_download_image_button: true,
     columns: 3,

@@ -1,6 +1,6 @@
 Image Downloader (Continued)
 ================
-This is a fork of Image Downloader by Vlad Sabev (vdsabev). Original extension is archived and this projects aims to fill the gap. The goal is to fix bugs, support more websites (as much as possible), add features and enhancements. Suggestions are welcome, please file an issue.
+This is a fork of Image Downloader by Vlad Sabev (vdsabev). Original extension isn't updated and this projects aims to fill the gap. The goal is to fix bugs, support more websites (as many as possible), add new features and enhancements. Suggestions are welcome - please file an issue on github!
 
 Description
 ================
@@ -24,6 +24,19 @@ If you need that kind of functionality, there are other extensions that can be u
 
 Change Log
 ================
+2.7
+Improved image discovery, bug fixes in code and design
+- Added parsing of the attribute 'srcset' and 'lowsrc' in 'img' tags
+- Added parsing of the attribute 'srcset' in 'source' tags (inside of html5 'picture' tag) 
+- Added canvas to image conversion - powerful technique to extract highly protected images (not even showing in Resources tab of Dev Tools). Note: at this time added images will pile up each time the extension button is clicked. They can be removed by updating the page.
+- Added check for long image urls (most probably data:image) and placement of them on top of the page instead of sending to the popup (to be coherent with canvas-to-image conversion which can produce large strings of data:image/jpeg)
+- Added selection of text info-shortcuts' colour (combined in one option with image selection colour) on options page. Icons are colourized accordingly too
+- Commented out code to open Options page after install and check for versions before 2.1 (in defaults.js)
+- Commented out minimum width option since it's currently broken (not sure if it's useful) (in options.html)
+- Made max-height to follow max-width option (to work better if small image preview is selected)
+- Replaced zepto.js with original unobfuscated source code
+- Fixed flashing animation for download message (apparently it was broken since the switch from jquery to zepto)
+
 2.6:
 Major redesign and improved image discovery
 - Modernized the popup look, images are placed on tiles with more image info, added tile color selection to options 

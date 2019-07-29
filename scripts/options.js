@@ -20,6 +20,7 @@
 
     // Images
     $('#show_image_url_checkbox').prop('checked', values.show_image_url === 'true');
+    $('#show_image_filename_checkbox').prop('checked', values.show_image_filename === 'true');
     $('#show_open_image_button_checkbox').prop('checked', values.show_open_image_button === 'true');
     $('#show_download_image_button_checkbox').prop('checked', values.show_download_image_button === 'true');
 
@@ -54,6 +55,7 @@
 
     // Images
     ls.show_image_url = $('#show_image_url_checkbox').prop('checked');
+    ls.show_image_filename = $('#show_image_filename_checkbox').prop('checked');
     ls.show_open_image_button = $('#show_open_image_button_checkbox').prop('checked');
     ls.show_download_image_button = $('#show_download_image_button_checkbox').prop('checked');
 

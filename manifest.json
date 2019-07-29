@@ -1,7 +1,7 @@
 {
   "name": "Image Downloader Continued",
   "description": "Browse and download images on a web page.",
-  "version": "2.6",
+  "version": "2.7",
   "minimum_chrome_version": "31",
   "manifest_version": 2,
   "permissions": [

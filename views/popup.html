@@ -38,13 +38,14 @@
         padding: 2px 2px 2px 0; /* compensate for browser defaults */
         background: #fff;
         border-bottom: 1px solid #ccc;
+        
+        z-index:10;
       }
 
       #filters_container input[type="text"],
       #filters_container input[type="button"],
       #filters_container input[type="number"],
-      #filters_container select
-      {
+      #filters_container select {
         height: 26px;
         margin-bottom: 4px;
       }
@@ -56,23 +57,28 @@
       #images_table img { cursor: pointer; }
 
       .open_image_button,
-      .download_image_button
-      {
+      .download_image_button {
         width: 22px;
         height: 34px;
         cursor: pointer;
 
-        background-size: 20px;
-        background-repeat: no-repeat;
-        background-position: center;
+        -webkit-mask-size: 20px;
+        -webkit-mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        
+        background-color: #3498db;
       }
-      .download_image_button
-	  {
-		background-size: 18px;
-	  }
+      .download_image_button {
+        -webkit-mask-size: 18px;
+      }
 
-      .open_image_button     { background-image: url("/images/open.svg"); }
-      .download_image_button { background-image: url("/images/download.svg"); }
+      .open_image_button { 
+        -webkit-mask-image: url("/images/open.svg");
+      }
+      
+      .download_image_button {
+        -webkit-mask-image: url("/images/download.svg");
+      }
 	  
       .image_url_textbox,
       .image_size_textbox,
@@ -82,29 +88,29 @@
       .image_biris_textbox,
       .image_yaris_textbox {
           cursor: pointer;
-	      float: left;
+          float: left;
           background: #3498db;
           padding: 1px 4px;
           border-radius: 9px;
           font-size: 12px;
           color: #fff;
-		  margin: 3px 2px 3px 2px
+          margin: 3px 2px 3px 2px
       }
 	  
-	  .images_table {
-		background-color:#e8e8e8;
-	  }
-		
-	  .filename_textbox {
-		  bottom:0px;
-		  left:0px;
-		  width:100%;
-		  box-sizing:border-box;
-		  z-index:1000;
-		  color:#6b6969;
-		  border:0px;
-		  padding:2px 2px;
-	  }
+      .images_table {
+        background-color:#e8e8e8;
+      }
+      
+      .filename_textbox {
+        bottom:0px;
+        left:0px;
+        width:100%;
+        box-sizing:border-box;
+        z-index:1000;
+        color:#6b6969;
+        border:0px;
+        padding:2px 2px;
+      }
     </style>
 
     <script src="/lib/zepto.js"></script>

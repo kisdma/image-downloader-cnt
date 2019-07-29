@@ -10,9 +10,8 @@
 
     extractImagesFromTags() {
 	
-      var arr = [].slice.apply(document.querySelectorAll('img, a, svg, link, video, style')).map(imageDownloader.extractImageFromElement);
+      var arr = [].slice.apply(document.querySelectorAll('img, a, svg, link, video, style, canvas, source')).map(imageDownloader.extractImageFromElement);
       arr = arr.flat();
-	 
       return arr;
     },
 
@@ -67,6 +66,15 @@
     },
 
     extractImageFromElement(element) {
+      if (element.hasAttribute("data-idc-ext")) {
+        if (element.getAttribute("data-idc-ext") === 'donotadd')
+          return '';
+      }
+    
+      if (element.tagName.toLowerCase() === 'canvas') {
+        const str = element.toDataURL('image/jpeg');
+        return str;
+      }
     
       if (element.tagName.toLowerCase() === 'style') {
         const html = element.innerHTML;
@@ -77,7 +85,6 @@
           if (item) {
             const url = item[1];
             if ((! /gstatic/i.test(url)) && (arr.indexOf(url) === -1)) {
-              console.log(url);
               if (imageDownloader.isImageURL(url)) {
                 if (url.indexOf('data:image/svg+xml;utf8,') === 0 ) {
                   arr.push(imageDownloader.svgElementToBase64(imageDownloader.htmlToElement(url.slice('data:image/svg+xml;utf8,'.length).replace(/\\"/g, '"'))));
@@ -117,17 +124,47 @@
         if (hashIndex >= 0) {
           src = src.substr(0, hashIndex);
         }
-        return src;
+        const srcset = element.srcset;
+        if (('srcset' in element) || ('lowsrc' in element)){
+          var arr = [],
+            item;
+          arr.push(src);
+          if ('lowsrc' in element) {
+            arr.push(element.lowsrc);
+          }
+          if ('srcset' in element) {
+            var srcsetRegex = /(^|\s|,)([^\s,]+)($|\s|,)/ig;
+            while (item = srcsetRegex.exec(element.srcset)) {
+              arr.push(item[2]);
+            }
+          }
+          return arr;
+        } else {
+          return src;
+        }
+      }
+      
+      if (element.tagName.toLowerCase() === 'source') {
+        let src = element.srcset;
+        const hashIndex = src.indexOf('#');
+        if (hashIndex >= 0) {
+          src = src.substr(0, hashIndex);
+        }
+        return imageDownloader.relativeWithBaseUrlToAbsolute(
+          document.location.href, src
+        );
       }
 	  
       if (element.tagName.toLowerCase() === 'link') {
         const href = element.href;
-        if (imageDownloader.isImageURL(href)) {
-          imageDownloader.linkedImages[href] = '0';
-          return imageDownloader.relativeUrlToAbsolute(href);
-        }
+        
+        if (element.rel !== 'stylesheet') {
+          if (imageDownloader.isImageURL(href)) {
+            imageDownloader.linkedImages[href] = '0';
+            return imageDownloader.relativeUrlToAbsolute(href);
+          }
 		
-        if (element.rel === 'stylesheet') {
+        } else {
           fetch(href).then(r => r.text()).then(result => {
             var arr = [],
               item;
@@ -205,7 +242,7 @@
 
     svgElementToBase64(element) {
       var s = new XMLSerializer().serializeToString(element);
-      if (s.length < 15000) {
+      if (s.length < 150000) {
         if (/[^\u0000-\u00ff]/.test(s)) {
           var encodedData = window.btoa(unescape(encodeURIComponent(s)));
           return 'data:image/svg+xml;base64,' + encodedData;
@@ -255,7 +292,20 @@
       const result = [];
       for (let key in hash) {
         if (key !== '') {
-          result.push(key);
+          if (key.length < 15000) {
+            result.push(key);
+          } else {
+            var div = document.createElement("div");
+            div.setAttribute("style", "background-color:#ffff; float:left; z-index:2147483647; position:relative; border-style: solid; border-width: 0.5px; width:210px; height:210px; box-shadow: 5px 5px 5px rgba(3,0,3,0.3); margin:5px 5px 5px 5px; vertical-align: middle; text-align: center; padding: 5px 5px; display: table;");
+            div.setAttribute("scrolling", "no");
+            div.setAttribute("frameborder", "0");
+            var span = document.createElement("span");
+            span.setAttribute("style", "display: table-cell; vertical-align: middle; ");
+            var img1 = imageDownloader.htmlToElement('<img style = "max-height:200px; max-width:200px; vertical-align: middle; " src = "'+key+'" data-idc-ext = "donotadd"/>');
+            span.appendChild(img1);
+            div.appendChild(span);
+            document.body.appendChild(div);
+          }
         }
       }
 
