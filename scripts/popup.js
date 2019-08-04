@@ -736,7 +736,7 @@
         chrome.downloads.download({ url: checkedImages[i] });
         downloading_notification.html("Downloading, DO NOT close popup. " + (i+1) + "out of " + checkedImages.length + " images submitted");
       }
-      downloading_notification.html("All " + (i+1) + " downloads submitted");
+      downloading_notification.html("All " + i + " downloads submitted");
 
       //flashDownloadingNotification(ls.image_count);
       flash(downloading_notification, 3.5, 0, function () { downloading_notification.remove(); });
