@@ -66,11 +66,23 @@
     },
 
     extractImageFromElement(element) {
+    
       if (element.hasAttribute("data-idc-ext")) {
         if (element.getAttribute("data-idc-ext") === 'donotadd')
           return '';
       }
     
+      if (element.tagName.toLowerCase() === 'script') {
+        const html = element.innerHTML;
+        var regex = /['"]([^)'"]*?\.(bmp|gif|jpe?g|png|svg|svgz|webp)[^)'"]*)['"]/ig;
+        var item, arr = [];
+
+        while (item = regex.exec(html)) {
+          arr.push(item[1]);
+        }
+        return arr;
+      }
+      
       if (element.tagName.toLowerCase() === 'canvas') {
         const str = element.toDataURL('image/jpeg');
         return str;
@@ -312,10 +324,70 @@
       return result;
     }
   };
+  
+  var foundImages = [];
+  var arrayStorage = document.getElementById('idc-array-storage');
+  if (arrayStorage) {
+    foundImages = JSON.parse(arrayStorage.getAttribute("data-links-array"));
+  } else {
+    var arrayStorage = document.createElement("div");
+    arrayStorage.setAttribute("id", "idc-array-storage");
+    arrayStorage.setAttribute("hidden", "true");
+    document.body.appendChild(arrayStorage);   
+  
+    // Create an observer instance.
+    var observer = new MutationObserver(function (mutations) {
+      for(let mutation of mutations) {
+        if (mutation.type === 'childList') {
+          //console.log('A child node has been added or removed.');
+          for(var j=0; j<mutation.addedNodes.length; ++j) {
+            if (mutation.addedNodes[j].nodeType === 1) {
+              var arr = [].slice.apply(mutation.addedNodes[j].querySelectorAll('img, a, svg, link, video, style, canvas, source')).map(imageDownloader.extractImageFromElement);
+              if (arr) {
+                arr = arr.flat();
+                var arrayStorage = document.getElementById('idc-array-storage');
+                if (arrayStorage) {
+                  var foundImages = JSON.parse(arrayStorage.getAttribute("data-links-array"));
+                  foundImages = [].concat(foundImages, arr);
+                  arrayStorage.setAttribute("data-links-array", JSON.stringify(foundImages));
+                }
+              }
+            }
+          }
+        }
+        else if (mutation.type === 'attributes') {
+          const url = mutation.target.getAttribute(mutation.attributeName);
+          
+          if (imageDownloader.isImageURL(url)) {
+            var arrayStorage = document.getElementById('idc-array-storage');
+            if (arrayStorage) {
+              var foundImages = JSON.parse(arrayStorage.getAttribute("data-links-array"));
+            }
+            if (!foundImages.includes(url)) {            
+              foundImages.push(url);
+              arrayStorage.setAttribute("data-links-array", JSON.stringify(foundImages));
+            }
+          }
+        }
+      }
+    });
+
+    // Config info for the observer.
+    var config = {
+      childList: true, 
+      subtree: true,
+      attributes: true,
+      attributeFilter: [ "src", "srcset" ]
+    };
+
+    // Observe the body (and its descendants) for `childList` and attribute changes.
+    observer.observe(document.body, config);
+  }
 
   imageDownloader.linkedImages = {}; // TODO: Avoid mutating this object in `extractImageFromElement`
   imageDownloader.images = imageDownloader.removeDuplicateOrEmpty(
     [].concat(
+      foundImages,
       imageDownloader.extractImagesFromTags(),
       imageDownloader.extractImagesFromStyles()
     ).map(imageDownloader.relativeUrlToAbsolute)
@@ -326,6 +398,7 @@
     images: imageDownloader.images
   });
 
+  arrayStorage.setAttribute("data-links-array", JSON.stringify(imageDownloader.images));
   imageDownloader.linkedImages = null;
   imageDownloader.images = null;
 }());
