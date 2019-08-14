@@ -6,7 +6,7 @@
     // Source: https://support.google.com/webmasters/answer/2598805?hl=en
     imageRegex: /(?:([^:/?#=]+):)?(?:\/\/([^/?#]*))?([^?#=]*\.(?:bmp|gif|jpe?g|png|svg|svgz|webp))(?:\?([^#]*))?(?:#(.*))?/i,
     urlRegexp: /(?:url\(\'?\"?)([^"'()]*)(?:\'?\"?\))/g,
-    umageUrlFromStyleRegexp: /url\(['"]?([^)]*?\.(bmp|gif|jpe?g|png|svg|svgz|webp))['"]?\)/g,
+    umageUrlFromStyleRegexp: /url\(['"]?(([^)]*?\.(bmp|gif|jpe?g|png|svg|svgz|webp))|([^()'"]*data:image[^()'"]*))['"]?\)/g,
 
     extractImagesFromTags() {
 	
@@ -308,15 +308,22 @@
             result.push(key);
           } else {
             var div = document.createElement("div");
+            div.setAttribute("class", "idc");
             div.setAttribute("style", "background-color:#ffff; float:left; z-index:2147483647; position:relative; border-style: solid; border-width: 0.5px; width:210px; height:210px; box-shadow: 5px 5px 5px rgba(3,0,3,0.3); margin:5px 5px 5px 5px; vertical-align: middle; text-align: center; padding: 5px 5px; display: table;");
             div.setAttribute("scrolling", "no");
             div.setAttribute("frameborder", "0");
             var span = document.createElement("span");
             span.setAttribute("style", "display: table-cell; vertical-align: middle; ");
             var img1 = imageDownloader.htmlToElement('<img style = "max-height:200px; max-width:200px; vertical-align: middle; " src = "'+key+'" data-idc-ext = "donotadd"/>');
+            img1.setAttribute("class", "idc-image");
             span.appendChild(img1);
             div.appendChild(span);
             document.body.appendChild(div);
+            for (let el1 of div.getElementsByTagName('*')) {
+              if (el1.nodeType === 1) {
+                el1.setAttribute('style', 'display:table !important');
+              }
+            } 
           }
         }
       }
@@ -382,6 +389,17 @@
 
     // Observe the body (and its descendants) for `childList` and attribute changes.
     observer.observe(document.body, config);
+  }
+  // Iterate over all elements in the main DOM.
+  for (let el of document.getElementsByTagName('*')) {
+   // If element contains shadow root then replace its 
+   // content with the HTML of shadow DOM.
+    if (el.shadowRoot) {
+      var shadowExtr = document.createElement("div");
+      shadowExtr.setAttribute("hidden", "true");
+      shadowExtr.innerHTML = el.shadowRoot.innerHTML;
+      document.body.appendChild(shadowExtr);
+    }
   }
 
   imageDownloader.linkedImages = {}; // TODO: Avoid mutating this object in `extractImageFromElement`
