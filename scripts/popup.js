@@ -367,6 +367,12 @@
     chrome.windows.getCurrent(function (currentWindow) {
       chrome.tabs.query({ active: true, windowId: currentWindow.id }, function (activeTabs) {
         chrome.tabs.executeScript(activeTabs[0].id, { file: '/scripts/send_images.js', allFrames: true });
+        chrome.tabs.insertCSS(activeTabs[0].id, {
+          code: '.idc-image { display: table !important; }',
+          cssOrigin: "user",
+          runAt: "document_idle",
+          allFrames: true 
+        });
       });
     });
   }
