@@ -498,7 +498,7 @@
         if (cached_images < allImages.length) {
           for (var i = cached_images; i < allImages.length; i++) {
             // Refilter the images after they're loaded in cache
-            images_cache.append($('<img src="' + encodeURI(allImages[i]) + '" />').on('load', filterImages));
+            images_cache.append($('<img src="' + (allImages[i]) + '" />').on('load', filterImages));
           }
         }
       }
@@ -557,7 +557,7 @@
 
       if (ls.show_image_width_filter === 'true' || ls.show_image_height_filter === 'true') {
         visibleImages = visibleImages.filter(function (url) {
-          var image = images_cache.children('img[src="' + encodeURI(url) + '"]')[0];
+          var image = images_cache.children('img[src="' + (url) + '"]')[0];
           return (ls.show_image_width_filter !== 'true' ||
                    (ls.filter_min_width_enabled !== 'true' || ls.filter_min_width <= image.naturalWidth) &&
                    (ls.filter_max_width_enabled !== 'true' || image.naturalWidth <= ls.filter_max_width)
@@ -571,14 +571,14 @@
   
   if (ls.show_sort_images_by_width === 'true' && ls.sort_by_size === 'true'){
     visibleImages = visibleImages.sort(function (url1, url2) {
-      var image1 = images_cache.children('img[src="' + encodeURI(url1) + '"]')[0];
-      var image2 = images_cache.children('img[src="' + encodeURI(url2) + '"]')[0];
+      var image1 = images_cache.children('img[src="' + (url1) + '"]')[0];
+      var image2 = images_cache.children('img[src="' + (url2) + '"]')[0];
       return (image2.naturalWidth + image2.naturalHeight) - (image1.naturalWidth + image1.naturalHeight);
     });
   } else {
     visibleImages = visibleImages.sort(function (url1, url2) {
-      var image1 = images_cache.children('img[src="' + encodeURI(url1) + '"]')[0];
-      var image2 = images_cache.children('img[src="' + encodeURI(url2) + '"]')[0];
+      var image1 = images_cache.children('img[src="' + (url1) + '"]')[0];
+      var image2 = images_cache.children('img[src="' + (url2) + '"]')[0];
       return  image2.naturalWidth - image1.naturalWidth;
     });
   }
@@ -589,8 +589,9 @@
     
   imSizes = [];
   for (var i = 0; i < visibleImages.length; i++) {
-    var image = images_cache.children('img[src="' + encodeURI(visibleImages[i]) + '"]')[0];
+    var image = images_cache.children('img[src="' + (visibleImages[i]) + '"]')[0];
       imSizes.push(image.naturalWidth + ' x ' + image.naturalHeight);
+      console.log(image);
     }
       
     imTypes = [];
