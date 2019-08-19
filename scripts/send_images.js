@@ -69,7 +69,7 @@
       
       if (element.tagName.toLowerCase() === 'image') {
         const href = element.href;
-        return imageDownloader.restoreFullUrl(element.getAttributeNS('http://www.w3.org/1999/xlink', 'href'));
+        return imageDownloader.restoreFullUrl(document.location.href, element.getAttributeNS('http://www.w3.org/1999/xlink', 'href'));
       }
     
       if (element.hasAttribute("data-idc-ext")) {
@@ -103,7 +103,7 @@
             const url = item[1];
             if ((! /gstatic/i.test(url)) && (arr.indexOf(url) === -1)) {
               if (imageDownloader.isImageURL(url)) {
-                arr.push(imageDownloader.restoreFullUrl(url));
+                arr.push(imageDownloader.restoreFullUrl(document.location.href, url));
               }
             }
           }
@@ -120,20 +120,19 @@
         if (('srcset' in element) || ('lowsrc' in element)){
           var arr = [],
             item;
-          arr.push(imageDownloader.restoreFullUrl(src));
+          arr.push(imageDownloader.restoreFullUrl(document.location.href, src));
           if ('lowsrc' in element) {
-            arr.push(imageDownloader.restoreFullUrl(element.lowsrc));
+            arr.push(imageDownloader.restoreFullUrl(document.location.href, element.lowsrc));
           }
           if ('srcset' in element) {
             var srcsetRegex = /(^|\s|,)([^\s,]+)($|\s|,)/ig;
             while (item = srcsetRegex.exec(element.srcset)) {
-              console.log(imageDownloader.restoreFullUrl(item[2]));
-              arr.push(imageDownloader.restoreFullUrl(item[2]));
+              arr.push(imageDownloader.restoreFullUrl(document.location.href, item[2]));
             }
           }
           return arr;
         } else {
-          return imageDownloader.restoreFullUrl(src);
+          return imageDownloader.restoreFullUrl(document.location.href, src);
         }
       }
       
@@ -165,7 +164,7 @@
               if (item) {
                 const url = item[1];
                 if (imageDownloader.isImageURL(url)) {
-                  arr.push(imageDownloader.restoreFullUrl(url));
+                  arr.push(imageDownloader.restoreFullUrl(href.substring(0, href.lastIndexOf("/")), url));
                 }
               }
             chrome.runtime.sendMessage({
@@ -185,10 +184,10 @@
         var arr = [];
         for (let el1 of element.getElementsByTagName('image')) {
           if (el1.nodeType === 1) {
-            arr.push(imageDownloader.restoreFullUrl(el1.getAttributeNS('http://www.w3.org/1999/xlink', 'href')));
+            arr.push(imageDownloader.restoreFullUrl(document.location.href, el1.getAttributeNS('http://www.w3.org/1999/xlink', 'href')));
           }
         } 
-        if (arr) {
+        if (arr && arr.length) {
           return arr;
         } else {
           return imageDownloader.svgElementToBase64(element);
@@ -249,7 +248,7 @@
     relativeWithBaseUrlToAbsolute(base, relative) {
       var stack = base.split("/"),
         parts = relative.split("/");
-      stack.pop(); // remove current file name (or empty string)
+      //stack.pop(); // remove current file name (or empty string)
              // (omit if "base" is the current folder without trailing slash)
       for (var i=0; i<parts.length; i++) {
         if (parts[i] == ".")
@@ -262,8 +261,7 @@
       return stack.join("/");
     },
     
-    restoreFullUrl(url) {
-    var base = document.location.href;
+    restoreFullUrl(base, url) {
       if (url.indexOf('data:image/svg+xml;utf8,') === 0 ) {
         return imageDownloader.svgElementToBase64(imageDownloader.htmlToElement(url.slice('data:image/svg+xml;utf8,'.length).replace(/\\"/g, '"')));
       }
