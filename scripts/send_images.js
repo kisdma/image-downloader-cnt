@@ -66,6 +66,11 @@
     },
 
     extractImageFromElement(element) {
+      
+      if (element.tagName.toLowerCase() === 'image') {
+        const href = element.href;
+        return imageDownloader.restoreFullUrl(element.getAttributeNS('http://www.w3.org/1999/xlink', 'href'));
+      }
     
       if (element.hasAttribute("data-idc-ext")) {
         if (element.getAttribute("data-idc-ext") === 'donotadd')
@@ -98,32 +103,7 @@
             const url = item[1];
             if ((! /gstatic/i.test(url)) && (arr.indexOf(url) === -1)) {
               if (imageDownloader.isImageURL(url)) {
-                if (url.indexOf('data:image/svg+xml;utf8,') === 0 ) {
-                  arr.push(imageDownloader.svgElementToBase64(imageDownloader.htmlToElement(url.slice('data:image/svg+xml;utf8,'.length).replace(/\\"/g, '"'))));
-                }
-                else if (url.indexOf('data:') === 0 ) {
-                  // URL is data
-                  arr.push(url);
-                }
-                else if (url.indexOf('://') > 0) { 
-                  // URL is absolute
-                  arr.push(url);
-                }
-                else if (url.indexOf('//') === 0 ) {
-                  arr.push(href.split("/")[0] + url);
-                }
-                else if (url.indexOf('/') === 0 ) {
-                  arr.push(imageDownloader.relativeUrlToAbsolute(url));
-                }
-                else {
-                  // URL is relative
-                  arr.push(
-                    imageDownloader.relativeWithBaseUrlToAbsolute(
-                      href, 
-                      url
-                    ) 
-                  );
-                }
+                arr.push(imageDownloader.restoreFullUrl(url));
               }
             }
           }
@@ -140,19 +120,20 @@
         if (('srcset' in element) || ('lowsrc' in element)){
           var arr = [],
             item;
-          arr.push(src);
+          arr.push(imageDownloader.restoreFullUrl(src));
           if ('lowsrc' in element) {
-            arr.push(element.lowsrc);
+            arr.push(imageDownloader.restoreFullUrl(element.lowsrc));
           }
           if ('srcset' in element) {
             var srcsetRegex = /(^|\s|,)([^\s,]+)($|\s|,)/ig;
             while (item = srcsetRegex.exec(element.srcset)) {
-              arr.push(item[2]);
+              console.log(imageDownloader.restoreFullUrl(item[2]));
+              arr.push(imageDownloader.restoreFullUrl(item[2]));
             }
           }
           return arr;
         } else {
-          return src;
+          return imageDownloader.restoreFullUrl(src);
         }
       }
       
@@ -184,32 +165,7 @@
               if (item) {
                 const url = item[1];
                 if (imageDownloader.isImageURL(url)) {
-                  if (url.indexOf('data:image/svg+xml;utf8,') === 0 ) {
-                    arr.push(imageDownloader.svgElementToBase64(imageDownloader.htmlToElement(url.slice('data:image/svg+xml;utf8,'.length).replace(/\\"/g, '"'))));
-                  }
-                  else if (url.indexOf('data:') === 0 ) {
-                    // URL is data
-                    arr.push(url);
-                  }
-                  else if (url.indexOf('://') > 0) { 
-                    // URL is absolute
-                    arr.push(url);
-                  }
-                  else if (url.indexOf('//') === 0 ) {
-                    arr.push(href.split("/")[0] + url);
-                  }
-                  else if (url.indexOf('/') === 0 ) {
-                    arr.push(imageDownloader.relativeUrlToAbsolute(url));
-                  }
-                  else {
-                    // URL is relative
-                    arr.push(
-                      imageDownloader.relativeWithBaseUrlToAbsolute(
-                        href, 
-                        url
-                      )
-                    );
-                  }
+                  arr.push(imageDownloader.restoreFullUrl(url));
                 }
               }
             chrome.runtime.sendMessage({
@@ -225,7 +181,18 @@
       }
 	  
       if (element.tagName.toLowerCase() === 'svg') {
-        return imageDownloader.svgElementToBase64(element)
+        const href = element.href;
+        var arr = [];
+        for (let el1 of element.getElementsByTagName('image')) {
+          if (el1.nodeType === 1) {
+            arr.push(imageDownloader.restoreFullUrl(el1.getAttributeNS('http://www.w3.org/1999/xlink', 'href')));
+          }
+        } 
+        if (arr) {
+          return arr;
+        } else {
+          return imageDownloader.svgElementToBase64(element);
+        }
       }
 
       if (element.tagName.toLowerCase() === 'a') {
@@ -280,20 +247,50 @@
     },
 
     relativeWithBaseUrlToAbsolute(base, relative) {
-		var stack = base.split("/"),
-			parts = relative.split("/");
-		stack.pop(); // remove current file name (or empty string)
-					 // (omit if "base" is the current folder without trailing slash)
-		for (var i=0; i<parts.length; i++) {
-			if (parts[i] == ".")
-				continue;
-			if (parts[i] == "..")
-				stack.pop();
-			else
-				stack.push(parts[i]);
-		}
-		return stack.join("/");
-	},
+      var stack = base.split("/"),
+        parts = relative.split("/");
+      stack.pop(); // remove current file name (or empty string)
+             // (omit if "base" is the current folder without trailing slash)
+      for (var i=0; i<parts.length; i++) {
+        if (parts[i] == ".")
+          continue;
+        if (parts[i] == "..")
+          stack.pop();
+        else
+          stack.push(parts[i]);
+      }
+      return stack.join("/");
+    },
+    
+    restoreFullUrl(url) {
+    var base = document.location.href;
+      if (url.indexOf('data:image/svg+xml;utf8,') === 0 ) {
+        return imageDownloader.svgElementToBase64(imageDownloader.htmlToElement(url.slice('data:image/svg+xml;utf8,'.length).replace(/\\"/g, '"')));
+      }
+      else if (url.indexOf('data:') === 0 ) {
+        // URL is data
+        return (url);
+      }
+      else if (url.indexOf('://') > 0) { 
+        // URL is absolute
+        return (url);
+      }
+      else if (url.indexOf('//') === 0 ) {
+        return (base.split("/")[0] + url);
+      }
+      else if (url.indexOf('/') === 0 ) {
+        return (imageDownloader.relativeUrlToAbsolute(url));
+      }
+      else {
+        // URL is relative
+        return (
+          imageDownloader.relativeWithBaseUrlToAbsolute(
+            base, 
+            url
+          )
+        );
+      }
+    },
 
     removeDuplicateOrEmpty(images) {
       const hash = {};
@@ -349,7 +346,7 @@
           //console.log('A child node has been added or removed.');
           for(var j=0; j<mutation.addedNodes.length; ++j) {
             if (mutation.addedNodes[j].nodeType === 1) {
-              var arr = [].slice.apply(mutation.addedNodes[j].querySelectorAll('img, a, svg, link, video, style, canvas, source')).map(imageDownloader.extractImageFromElement);
+              var arr = [].slice.apply(mutation.addedNodes[j].querySelectorAll('image, img, a, svg, link, video, style, canvas, source')).map(imageDownloader.extractImageFromElement);
               if (arr) {
                 arr = arr.flat();
                 var arrayStorage = document.getElementById('idc-array-storage');
@@ -363,6 +360,7 @@
           }
         }
         else if (mutation.type === 'attributes') {
+          //console.log('Attributes have been added or removed.');
           const url = mutation.target.getAttribute(mutation.attributeName);
           
           if (imageDownloader.isImageURL(url)) {
@@ -384,7 +382,7 @@
       childList: true, 
       subtree: true,
       attributes: true,
-      attributeFilter: [ "src", "srcset" ]
+      attributeFilter: [ "src", "srcset", "image", "svg", "img" ] // May be extended in the future. Didn't make it comprehensive because worry about performance penalty. Needs more testing and/or use cases
     };
 
     // Observe the body (and its descendants) for `childList` and attribute changes.
