@@ -477,9 +477,15 @@
     for (let i = l; i < allImages.length; i++) {
       if (regex.test(allImages[i])) {
         yid = regex.exec(allImages[i])[3];
-        arr2.push('https://img.youtube.com/vi/' + yid + '/maxresdefault.jpg');
+        newIm = 'https://img.youtube.com/vi/' + yid + '/maxresdefault.jpg';
+        if ((arr2.indexOf(newIm) === -1)&&(allImages.indexOf(newIm) === -1)) {
+          arr2.push(newIm);
+        }
         for (let i = 0; i < 4; i++) {
-          arr2.push('https://img.youtube.com/vi/' + yid + '/' + i + '.jpg');
+          newIm = 'https://img.youtube.com/vi/' + yid + '/' + i + '.jpg';
+          if ((arr2.indexOf(newIm) === -1)&&(allImages.indexOf(newIm) === -1)) {
+            arr2.push(newIm);
+          }
         }
       }
     }
