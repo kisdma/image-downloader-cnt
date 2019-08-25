@@ -137,14 +137,13 @@
       }
       
       if (element.tagName.toLowerCase() === 'source') {
-        let src = element.srcset;
-        const hashIndex = src.indexOf('#');
-        if (hashIndex >= 0) {
-          src = src.substr(0, hashIndex);
+        var arr = [],
+          item;
+        var srcsetRegex = /(^|\s|,)([^\s,]+)($|\s|,)/ig;
+        while (item = srcsetRegex.exec(element.srcset)) {
+          arr.push(imageDownloader.restoreFullUrl(document.location.href, item[2]));
         }
-        return imageDownloader.relativeWithBaseUrlToAbsolute(
-          document.location.href, src
-        );
+        return arr;
       }
 	  
       if (element.tagName.toLowerCase() === 'link') {
