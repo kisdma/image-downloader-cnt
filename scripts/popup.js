@@ -366,6 +366,21 @@
     // Get images on the page
     chrome.windows.getCurrent(function (currentWindow) {
       chrome.tabs.query({ active: true, windowId: currentWindow.id }, function (activeTabs) {
+        chrome.webNavigation.getAllFrames({
+          tabId: activeTabs[0].id,
+          }, function(frames) {
+            for (var frame of frames) {
+              chrome.webNavigation.getAllFrames({
+                tabId: frame.frameId,
+                }, function(frames1) {
+                  if (frames1) {
+                    for (var frame1 of frames1) {
+                      console.log(frame1.frameId);
+                    }
+                  }
+              });
+            }
+        });
         chrome.tabs.executeScript(activeTabs[0].id, { file: '/scripts/send_images.js', allFrames: true });
         chrome.tabs.insertCSS(activeTabs[0].id, {
           code: '.idc-image { display: table !important; }',
@@ -462,6 +477,22 @@
         allImages.splice(i,1) 
         i--;
         newIm = regex.exec(temp_elem)[1] + '=s16383';
+        if ((arr1.indexOf(newIm) === -1)&&(allImages.indexOf(newIm) === -1)) {
+          arr1.push(newIm);
+        } else {
+        //do nothing
+        }
+      }
+    }
+    // Adding high-resolution links for reduced images (by resize command)
+	  var regex = RegExp('(.*[\?&])resize=[^&]+($|&)(.*)','i');
+    for (let i = l; i < allImages.length; i++) {
+      if (regex.test(allImages[i])) {
+        var re = regex.exec(allImages[i]);
+        newIm = re[1]+re[3];
+        if (newIm[newIm.length-1] === '?') {
+          newIm = newIm.slice(0, newIm.length - 1);
+        }
         if ((arr1.indexOf(newIm) === -1)&&(allImages.indexOf(newIm) === -1)) {
           arr1.push(newIm);
         } else {
@@ -693,7 +724,7 @@
           var arr = visibleImages[index].split('/');
           var filename = /^([^#&?=]*)([#&?=].*$|$)/i.exec(arr[arr.length-1])[1];
         }
-        var image = '<td colspan="' + colspan + '" style="padding: 0px 2px; min-width: ' + ls.image_max_width + 'px; width: ' + columnWidth + '; vertical-align: top; text-align: center;"><img id="image' + index + '" src="' + visibleImages[index] + '" style="max-height:' + ls.image_max_width + 'px;" title = "' + filename + '"/></td>';
+        var image = '<td colspan="' + colspan + '" style="padding: 0px 2px; min-width: ' + ls.image_max_width + 'px; width: ' + columnWidth + '; vertical-align: top; text-align: center;"><img id="image' + index + '" loading="lazy" src="' + visibleImages[index] + '" style="max-height:' + ls.image_max_width + 'px;" title = "' + filename + '"/></td>';
         images_row.append(image);
         conainer_table.append(images_row);    
         

@@ -10,7 +10,7 @@
 
     extractImagesFromTags() {
 	
-      var arr = [].slice.apply(document.querySelectorAll('img, a, svg, link, video, style, canvas, source')).map(imageDownloader.extractImageFromElement);
+      var arr = [].slice.apply(document.querySelectorAll('amp-img, img, a, svg, link, video, style, canvas, source')).map(imageDownloader.extractImageFromElement);
       arr = arr.flat();
       return arr;
     },
@@ -90,6 +90,7 @@
       
       if (element.tagName.toLowerCase() === 'canvas') {
         const str = element.toDataURL('image/jpeg');
+        //console.log(str);
         return str;
       }
     
@@ -110,36 +111,38 @@
         return arr;
       }
       
-      if (element.tagName.toLowerCase() === 'img') {
+      if ((element.tagName.toLowerCase() === 'img') || (element.tagName.toLowerCase() === 'amp-img')) {
         let src = element.src;
-        const hashIndex = src.indexOf('#');
-        if (hashIndex >= 0) {
-          src = src.substr(0, hashIndex);
-        }
-        const srcset = element.srcset;
-        if (('srcset' in element) || ('lowsrc' in element)){
-          var arr = [],
-            item;
-          arr.push(imageDownloader.restoreFullUrl(document.location.href, src));
-          if ('lowsrc' in element) {
-            arr.push(imageDownloader.restoreFullUrl(document.location.href, element.lowsrc));
+        if (src) {
+          const hashIndex = src.indexOf('#');
+          if (hashIndex >= 0) {
+            src = src.substr(0, hashIndex);
           }
-          if ('srcset' in element) {
-            var srcsetRegex = /(^|\s|,)([^\s,]+)($|\s|,)/ig;
-            while (item = srcsetRegex.exec(element.srcset)) {
-              arr.push(imageDownloader.restoreFullUrl(document.location.href, item[2]));
+          const srcset = element.srcset;
+          if (element.hasAttribute('srcset') || element.hasAttribute('lowsrc')) {
+            var arr = [],
+              item;
+            arr.push(imageDownloader.restoreFullUrl(document.location.href, src));
+            if (element.hasAttribute('lowsrc')) {
+              arr.push(imageDownloader.restoreFullUrl(document.location.href, element.lowsrc));
             }
+            if (element.hasAttribute('srcset')) {
+              var srcsetRegex = /(^|\s|,)([^\s,]+)($|\s|,)/ig;
+              while (item = srcsetRegex.exec(element.srcset)) {
+                arr.push(imageDownloader.restoreFullUrl(document.location.href, item[2]));
+              }
+            }
+            return arr;
+          } else {
+            return imageDownloader.restoreFullUrl(document.location.href, src);
           }
-          return arr;
-        } else {
-          return imageDownloader.restoreFullUrl(document.location.href, src);
         }
       }
       
       if (element.tagName.toLowerCase() === 'source') {
         var arr = [],
           item;
-        var srcsetRegex = /(^|\s|,)([^\s,]+)($|\s|,)/ig;
+        var srcsetRegex = /(^|\s|x,|w,)([^\s]+)($|\s)/ig;
         while (item = srcsetRegex.exec(element.srcset)) {
           arr.push(imageDownloader.restoreFullUrl(document.location.href, item[2]));
         }
@@ -149,7 +152,10 @@
       if (element.tagName.toLowerCase() === 'link') {
         const href = element.href;
         
-        if (element.rel !== 'stylesheet') {
+        if (element.rel === 'mask-icon') {
+        // Used for Safari pinned tabs. Probably safe to ignore
+          return '';
+        } else if (element.rel !== 'stylesheet') {
           if (imageDownloader.isImageURL(href)) {
             imageDownloader.linkedImages[href] = '0';
             return imageDownloader.relativeUrlToAbsolute(href);
@@ -163,7 +169,7 @@
               if (item) {
                 const url = item[1];
                 if (imageDownloader.isImageURL(url)) {
-                  arr.push(imageDownloader.restoreFullUrl(href.substring(0, href.lastIndexOf("/")), url));
+                  arr.push(imageDownloader.restoreFullUrl(href, url));
                 }
               }
             chrome.runtime.sendMessage({
@@ -187,6 +193,7 @@
           }
         } 
         if (arr && arr.length) {
+          console.log('here');
           return arr;
         } else {
           return imageDownloader.svgElementToBase64(element);
@@ -241,14 +248,17 @@
     },
 
     relativeUrlToAbsolute(url) {
-      return url.indexOf('/') === 0 ? `${window.location.origin}${url}` : url;
+      if (url) {
+        return url.indexOf('/') === 0 ? `${window.location.origin}${url}` : url;
+      }
+      return '';
     },
 
     relativeWithBaseUrlToAbsolute(base, relative) {
       var stack = base.split("/"),
         parts = relative.split("/");
-      //stack.pop(); // remove current file name (or empty string)
-             // (omit if "base" is the current folder without trailing slash)
+      stack.pop(); // remove current file name (or empty string)
+                   // (omit if "base" is the current folder without trailing slash)
       for (var i=0; i<parts.length; i++) {
         if (parts[i] == ".")
           continue;
@@ -308,7 +318,7 @@
             div.setAttribute("frameborder", "0");
             var span = document.createElement("span");
             span.setAttribute("style", "display: table-cell; vertical-align: middle; ");
-            var img1 = imageDownloader.htmlToElement('<img style = "max-height:200px; max-width:200px; vertical-align: middle; " src = "'+key+'" data-idc-ext = "donotadd"/>');
+            var img1 = imageDownloader.htmlToElement('<img src = "'+key+'" data-idc-ext = "donotadd"/>');
             img1.setAttribute("class", "idc-image");
             span.appendChild(img1);
             div.appendChild(span);
@@ -318,6 +328,7 @@
                 el1.setAttribute('style', 'display:table !important');
               }
             } 
+            img1.setAttribute('style', 'max-height:200px; max-width:200px; vertical-align: middle; display:table !important');
           }
         }
       }
@@ -328,19 +339,20 @@
   
   var foundImages = [];
   var arrayStorage = document.getElementById('idc-array-storage');
-  if (arrayStorage) {
+  if (typeof(arrayStorage) != 'undefined' && arrayStorage != null)
+  {
     foundImages = JSON.parse(arrayStorage.getAttribute("data-links-array"));
-  } else {
+  } else if (typeof(document.body) != 'undefined' && document.body != null) {
     var arrayStorage = document.createElement("div");
     arrayStorage.setAttribute("id", "idc-array-storage");
     arrayStorage.setAttribute("hidden", "true");
     document.body.appendChild(arrayStorage);   
   
-    // Create an observer instance.
+    //Create an observer instance.
     var observer = new MutationObserver(function (mutations) {
       for(let mutation of mutations) {
         if (mutation.type === 'childList') {
-          //console.log('A child node has been added or removed.');
+          // console.log('A child node has been added or removed.');
           for(var j=0; j<mutation.addedNodes.length; ++j) {
             if (mutation.addedNodes[j].nodeType === 1) {
               var arr = [].slice.apply(mutation.addedNodes[j].querySelectorAll('image, img, a, svg, link, video, style, canvas, source')).map(imageDownloader.extractImageFromElement);
@@ -357,7 +369,7 @@
           }
         }
         else if (mutation.type === 'attributes') {
-          //console.log('Attributes have been added or removed.');
+          // console.log('Attributes have been added or removed.');
           const url = mutation.target.getAttribute(mutation.attributeName);
           
           if (imageDownloader.isImageURL(url)) {
@@ -374,7 +386,7 @@
       }
     });
 
-    // Config info for the observer.
+    //Config info for the observer.
     var config = {
       childList: true, 
       subtree: true,
@@ -382,24 +394,29 @@
       attributeFilter: [ "src", "srcset", "image", "svg", "img" ] // May be extended in the future. Didn't make it comprehensive because worry about performance penalty. Needs more testing and/or use cases
     };
 
-    // Observe the body (and its descendants) for `childList` and attribute changes.
+    //Observe the body (and its descendants) for `childList` and attribute changes.
     observer.observe(document.body, config);
   }
   // Iterate over all elements in the main DOM.
+  var sh_r_arr = [];
   for (let el of document.getElementsByTagName('*')) {
    // If element contains shadow root then replace its 
    // content with the HTML of shadow DOM.
-    if (el.shadowRoot) {
-      var shadowExtr = document.createElement("div");
-      shadowExtr.setAttribute("hidden", "true");
-      shadowExtr.innerHTML = el.shadowRoot.innerHTML;
-      document.body.appendChild(shadowExtr);
+    if ((el.shadowRoot) && (el.tagName !== 'WEB-SCRAPBOOK')) {
+      if (el.shadowRoot.innerHTML.length < 15000) {
+        var shadowExtr = document.createElement("div");
+        shadowExtr.setAttribute("hidden", "true");
+        shadowExtr.innerHTML = el.shadowRoot.innerHTML;
+        // document.body.appendChild(shadowExtr);
+        sh_r_arr = sh_r_arr.concat([].slice.apply(shadowExtr.querySelectorAll('amp-img, img, a, svg, link, video, style, canvas, source')).map(imageDownloader.extractImageFromElement).flat());
+      }
     }
   }
 
   imageDownloader.linkedImages = {}; // TODO: Avoid mutating this object in `extractImageFromElement`
   imageDownloader.images = imageDownloader.removeDuplicateOrEmpty(
     [].concat(
+      sh_r_arr,
       foundImages,
       imageDownloader.extractImagesFromTags(),
       imageDownloader.extractImagesFromStyles()
@@ -411,7 +428,93 @@
     images: imageDownloader.images
   });
 
-  arrayStorage.setAttribute("data-links-array", JSON.stringify(imageDownloader.images));
+  if (typeof(arrayStorage) != 'undefined' && arrayStorage != null)
+  {
+    arrayStorage.setAttribute("data-links-array", JSON.stringify(imageDownloader.images));
+  }
+  
+  // var idcPanel = document.getElementById('idc-panel');
+  // if (idcPanel) {
+    // document.documentElement.removeChild(idcPanel);
+  // } else {
+    // idcPanel = document.createElement("div");
+    // idcPanel.setAttribute("id","idc-panel");
+    // idcPanel.setAttribute("style", "background-color:#ffff;"+
+      // "float:left;"+
+      // "z-index:2147483647;"+
+      // "position:fixed;"+
+      // "top: 0;"+
+      // "left: 0;"+
+      // "border-style: solid;"+
+      // "border-width: 0.5px;"+
+      // "width: calc(210px*3); height: calc(210px*3);"+
+      // "box-shadow: 5px 5px 5px rgba(3,0,3,0.3);"+
+      // "margin:5px 5px 5px 5px;"+
+      // "vertical-align: middle;"+
+      // "text-align: center;"+
+      // "padding: 5px 5px;"+
+      // "overflow-y:scroll;");
+    // document.documentElement.appendChild(idcPanel);
+    
+    // var images_table = document.createElement("table");
+    // images_table.setAttribute("id","images_table");
+    // images_table.setAttribute("class","grid");
+    // images_table.setAttribute("style", "all: unset;");  
+    // idcPanel.appendChild(images_table);
+
+    // var columns = 3;
+    // var colspan = 3;
+    // var image_max_width = 200;
+    // var image_tile_color = '#f2f7ff';
+    // var image_border_width = 3;
+    
+    // var columnWidth = (Math.round(100 * 100 / columns) / 100) + '%';
+    // var rows = Math.ceil(imageDownloader.images.length / columns);
+
+    // for (var rowIndex = 0; rowIndex < rows; rowIndex++) {
+      // var conainer_row = document.createElement("tr");
+      // for (var columnIndex = 0; columnIndex < columns; columnIndex++) {
+        // var conainer_td = document.createElement("td");
+        // conainer_td.setAttribute("colspan", colspan);
+        // conainer_td.setAttribute("style", "all: unset; min-width: " + image_max_width + "px; width: " + columnWidth + "; vertical-align: top;");
+        // var conainer_div = document.createElement("div");
+        // conainer_div.setAttribute("style", "all: unset; background-color:" + image_tile_color + "; box-shadow: 5px 5px 5px rgba(3,0,3,0.3); margin:5px 5px 5px 5px;");
+        // var conainer_table = document.createElement("table");
+        // conainer_table.setAttribute("style", "all: unset;");  
+        // var index = rowIndex * columns + columnIndex;
+        // if (index === imageDownloader.images.length) break;
+        
+        // //Images row
+        // var images_row = document.createElement("tr");
+        // images_row.setAttribute("style", "all: unset;");  
+        // if (/base64/i.test(imageDownloader.images[index])) {
+          // var filename = 'base64';
+        // } else {
+          // var arr = imageDownloader.images[index].split('/');
+          // var filename = /^([^#&?=]*)([#&?=].*$|$)/i.exec(arr[arr.length-1])[1];
+        // }
+        // var image = document.createElement("td");
+        // image.setAttribute("colspan", colspan);
+        // image.setAttribute("style", "all: unset; padding: 0px 2px; min-width: " + image_max_width + "px; width: " + columnWidth + "; vertical-align: top; text-align: center;");        
+        // var image1 = document.createElement("img");
+        // image1.setAttribute("id", "image" + index);
+        // image1.setAttribute("title", filename);
+        // image1.setAttribute("style", "all: unset; padding: 0px 2px; max-width: " + image_max_width + "px; vertical-align: top; text-align: center; max-height:" + image_max_width + "px; max-width: " + image_max_width + "px; border-width: " + image_border_width + "px; border-style: solid; border-color: " + image_tile_color);
+        // image1.setAttribute("src", imageDownloader.images[index]);
+        // image.appendChild(image1);
+        // images_row.appendChild(image);
+        
+        // conainer_table.appendChild(images_row);
+        // conainer_div.appendChild(conainer_table);
+        // conainer_td.appendChild(conainer_div);
+        
+        // conainer_row.appendChild(conainer_td);
+          
+        // images_table.appendChild(conainer_row);      
+      // }
+    // }
+  // }
+  
   imageDownloader.linkedImages = null;
   imageDownloader.images = null;
 }());
