@@ -485,7 +485,7 @@
       }
     }
     // Adding high-resolution links for reduced images (by resize command)
-	  var regex = RegExp('(.*[\?&])resize=[^&]+($|&)(.*)','i');
+	  regex = RegExp('(.*[\?&])resize=[^&]+($|&)(.*)','i');
     for (let i = l; i < allImages.length; i++) {
       if (regex.test(allImages[i])) {
         var re = regex.exec(allImages[i]);
@@ -493,6 +493,19 @@
         if (newIm[newIm.length-1] === '?') {
           newIm = newIm.slice(0, newIm.length - 1);
         }
+        if ((arr1.indexOf(newIm) === -1)&&(allImages.indexOf(newIm) === -1)) {
+          arr1.push(newIm);
+        } else {
+        //do nothing
+        }
+      }
+    }
+    // Adding high-resolution links for cloudfront.net
+	  regex = RegExp('(.*\.cloudfront\.net\/.*)\/m\/(.*)','i');
+    for (let i = l; i < allImages.length; i++) {
+      if (regex.test(allImages[i])) {
+        var re = regex.exec(allImages[i]);
+        newIm = re[1]+'/3x/'+re[2];
         if ((arr1.indexOf(newIm) === -1)&&(allImages.indexOf(newIm) === -1)) {
           arr1.push(newIm);
         } else {

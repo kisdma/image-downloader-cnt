@@ -158,7 +158,7 @@
         } else if (element.rel !== 'stylesheet') {
           if (imageDownloader.isImageURL(href)) {
             imageDownloader.linkedImages[href] = '0';
-            return imageDownloader.relativeUrlToAbsolute(href);
+            return imageDownloader.restoreFullUrl(document.location.href, href);
           }
 		
         } else {
@@ -270,7 +270,14 @@
       return stack.join("/");
     },
     
+    restoreFullUrlWithDocumentBase(url) {
+      return imageDownloader.restoreFullUrl(document.location.href, url);
+    },
+    
     restoreFullUrl(base, url) {
+      if (url === '') {
+        return '';
+      }
       if (url.indexOf('data:image/svg+xml;utf8,') === 0 ) {
         return imageDownloader.svgElementToBase64(imageDownloader.htmlToElement(url.slice('data:image/svg+xml;utf8,'.length).replace(/\\"/g, '"')));
       }
@@ -420,7 +427,7 @@
       foundImages,
       imageDownloader.extractImagesFromTags(),
       imageDownloader.extractImagesFromStyles()
-    ).map(imageDownloader.relativeUrlToAbsolute)
+    ).map(imageDownloader.restoreFullUrlWithDocumentBase)
   );
 
   chrome.runtime.sendMessage({
