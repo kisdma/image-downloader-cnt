@@ -18,6 +18,10 @@ WARNING: If you haven't set up a default download directory, you will have to ma
 
 Change Log
 ================
+2.9
+- Fixed a bug in relative url restoration
+- Added higher resolution images discovery for cloudfront.net 
+- Restored parsing of 'link rel="mask-icon"' (previously disabled)
 2.8:  
 Improved image discovery and collection, many bugfixes
 - Added injection script to prevent pages from closing shadowDOM (that made images inside undiscoverable). Note: websites use this to circumvent adblockers

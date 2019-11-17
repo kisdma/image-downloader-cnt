@@ -152,10 +152,7 @@
       if (element.tagName.toLowerCase() === 'link') {
         const href = element.href;
         
-        if (element.rel === 'mask-icon') {
-        // Used for Safari pinned tabs. Probably safe to ignore
-          return '';
-        } else if (element.rel !== 'stylesheet') {
+        if (element.rel !== 'stylesheet') {
           if (imageDownloader.isImageURL(href)) {
             imageDownloader.linkedImages[href] = '0';
             return imageDownloader.restoreFullUrl(document.location.href, href);
